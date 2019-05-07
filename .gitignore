@@ -1,1 +1,3 @@
 fasto/bin
+!fasto/bin/fasto
+!fasto/bin/runtests.sh
