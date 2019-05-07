@@ -31,6 +31,10 @@ exception MyError of string * Position
 type FunTable = SymTab.SymTab<UntypedFunDec>
 type VarTable = SymTab.SymTab<Value>
 
+type result<'a> =
+    | Correct of 'a
+    | Wrong   of 'a
+
 (* Build a function table, which associates a function names with function
    declarations. *)
 let rec buildFtab (fdecs : UntypedFunDec list) : FunTable =
@@ -154,13 +158,13 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
           | _ -> invalidOperands "Minus on non-integral args: " [(Int, Int)] res1 res2 pos
 
   (* TODO: project task 1:
-     Look in `AbSyn.fs` for the arguments of the `Times` 
-     (`Divide`,...) expression constructors. 
-        Implementation similar to the cases of Plus/Minus. 
+     Look in `AbSyn.fs` for the arguments of the `Times`
+     (`Divide`,...) expression constructors.
+        Implementation similar to the cases of Plus/Minus.
         Try to pattern match the code above.
         For `And`/`Or`: make sure to implement the short-circuit semantics,
         e.g., `And (e1, e2, pos)` should not evaluate `e2` if `e1` already
-              evaluates to false. 
+              evaluates to false.
   *)
   | Times(e1, e2, pos) ->
       let res1 = evalExp(e1,vtab, ftab)
@@ -174,17 +178,56 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
       match (res1, res2) with
           | (IntVal n1, IntVal n2) -> IntVal (n1/n2)
           | _ -> invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
-  | And (_, _, _) ->
-        failwith "Unimplemented interpretation of &&"
-  | Or (_, _, _) ->
-        failwith "Unimplemented interpretation of ||"
+  | And (e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab,ftab)
+      let (typeError1,res2) =
+          match res1 with
+              | BoolVal true  -> (false, evalExp(e2,vtab,ftab))
+              | BoolVal false -> (false, (BoolVal false))
+              | _             -> (true, (BoolVal false))
+      let typeError2 =
+          match res2 with
+              |BoolVal _ -> false
+              |_         -> true
+
+      if typeError1 then
+          invalidOperand "and'ing of non-bool arg: " Bool res1 pos
+      elif typeError2 then
+          invalidOperand "and'ing of non-bool arg: " Bool res2 pos
+      else
+          res2
+
+  | Or (e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab,ftab)
+      let (typeError1,res2) =
+          match res1 with
+              | BoolVal true  -> (false, (BoolVal true))
+              | BoolVal false -> (false, evalExp(e2,vtab,ftab))
+              | _             -> (true, (BoolVal false))
+      let typeError2 =
+          match res2 with
+              |BoolVal _ -> false
+              |_         -> true
+
+      if typeError1 then
+          invalidOperand "and'ing of non-bool arg: " Bool res1 pos
+      elif typeError2 then
+          invalidOperand "and'ing of non-bool arg: " Bool res2 pos
+      else
+          res2
+
   | Not(e1, pos) ->
       let res1 = evalExp(e1,vtab, ftab)
       match res1 with
           |BoolVal n1 -> BoolVal (not n1)
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
-  | Negate(_, _) ->
-        failwith "Unimplemented interpretation of negate"
+
+    //cannot test multiplication and division
+  | Negate(e1, pos) ->
+
+      match res1 with
+          |IntVal n1 -> IntVal (-n1)
+          |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
 
   | Equal(e1, e2, pos) ->
         let r1 = evalExp(e1, vtab, ftab)

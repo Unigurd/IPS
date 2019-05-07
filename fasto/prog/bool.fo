@@ -1,2 +1,17 @@
-fun bool main() =
-    true
+fun [char] main() =
+    let aa = write(true) in
+    let ab = write(false) in
+    let ac = write(not true) in
+    let ad = write(not false) in
+    let a = write(true && false) in
+    let b = write(false && true) in
+    let c = write(true && true) in
+    let d = write(false && false) in
+    let e = write(true || false) in
+    let f = write(false || true) in
+    let g = write(true || true) in
+    let h = write(false || false) in
+    let i = write(true || true && false) in
+    let j = write(not true && false) in
+    let k = write(not false || true) in
+    "hej"
