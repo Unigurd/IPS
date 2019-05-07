@@ -86,6 +86,12 @@ rule Token = parse
                                   ( int (Encoding.UTF8.GetString(lexbuf.Lexeme))
                                   , getPos lexbuf )
                               }
+
+  | "true"                { Parser.TRUE   (true,  getPos lexbuf) }
+  | "false"               { Parser.FALSE  (false, getPos lexbuf) }
+  | "not"                 { Parser.NOT    (getPos lexbuf) }
+
+
   | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*
                           { keyword ( Encoding.UTF8.GetString(lexbuf.Lexeme)
                                     , getPos lexbuf ) }
@@ -102,8 +108,13 @@ rule Token = parse
                             let str1 = str0.Substring (1, (String.length str0) - 2)
                             Parser.STRINGLIT (AbSyn.fromCString str1, getPos lexbuf)
                           }
+  | '~'                   { Parser.NEGATE (getPos lexbuf) }
+  | "&&"                  { Parser.AND    (getPos lexbuf) }
+  | "||"                  { Parser.OR     (getPos lexbuf) }
   | '+'                   { Parser.PLUS   (getPos lexbuf) }
   | '-'                   { Parser.MINUS  (getPos lexbuf) }
+  | '*'                   { Parser.TIMES  (getPos lexbuf) }
+  | '/'                   { Parser.DIVIDE (getPos lexbuf) }
   | "=>"                  { Parser.ARROW  (getPos lexbuf) }
   | "=="                  { Parser.DEQ    (getPos lexbuf) }
   | '='                   { Parser.EQ     (getPos lexbuf) }

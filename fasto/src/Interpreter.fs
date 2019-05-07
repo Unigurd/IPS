@@ -162,16 +162,27 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
         e.g., `And (e1, e2, pos)` should not evaluate `e2` if `e1` already
               evaluates to false. 
   *)
-  | Times(_, _, _) ->        
-        failwith "Unimplemented interpretation of multiplication"
-  | Divide(_, _, _) ->
-        failwith "Unimplemented interpretation of division"
+  | Times(e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      let res2 = evalExp(e2,vtab, ftab)
+      match (res1, res2) with
+          | (IntVal n1, IntVal n2) -> IntVal (n1*n2)
+          | _ -> invalidOperands "Multiplication on non-integral args: " [(Int, Int)] res1 res2 pos
+  | Divide(e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      let res2 = evalExp(e2,vtab, ftab)
+      match (res1, res2) with
+          | (IntVal n1, IntVal n2) -> IntVal (n1/n2)
+          | _ -> invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
   | And (_, _, _) ->
         failwith "Unimplemented interpretation of &&"
   | Or (_, _, _) ->
         failwith "Unimplemented interpretation of ||"
-  | Not(_, _) ->
-        failwith "Unimplemented interpretation of not"
+  | Not(e1, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      match res1 with
+          |BoolVal n1 -> BoolVal (not n1)
+          |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
   | Negate(_, _) ->
         failwith "Unimplemented interpretation of negate"
 
