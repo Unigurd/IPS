@@ -1,0 +1,22 @@
+fun int main() =
+    let n = read(int) in
+    if n < 1 then
+        let waste0 = write("Incorrect Input!") in
+        0
+    else
+        let arr   = map(read_fun, iota(n)) in
+        let diffs =
+            map(fn int (int i) =>   // lambda to close over arr
+                    if i == 0 then
+                        arr[i]
+                    else
+                        arr[i] - arr[i-1]
+                ,
+                iota(n)) in
+
+        let result = reduce(fn int(int a, int b) => a + b, 0, diffs) in
+        let waste1 = write("") in
+        write(result)
+
+fun int read_fun(int a) =
+    read(int)
