@@ -7,6 +7,9 @@ fasto/bin
 \#*#
 .#*
 
+# vim files
+*.swp
+
 # generated test files
 fasto/tests/*.asm
 
