@@ -9,3 +9,10 @@ fasto/bin
 
 # generated test files
 fasto/tests/*.asm
+
+# report files
+report.aux
+report.log
+report.out
+report.pdf
+report.dvi

@@ -42,8 +42,8 @@ let parse_error_rich =
 %token <string*(int*int)> ID STRINGLIT
 %token <(int*int)> IF THEN ELSE LET IN EOF
 %token <(int*int)> INT CHAR BOOL
-%token <(int*int)> AND OR NOT NEGATE
 %token <(int*int)> PLUS MINUS LESS
+%token <(int*int)> AND OR NOT NEGATE
 %token <(int*int)> TIMES DIVIDE
 %token <(int*int)> DEQ LTH EQ OP MAP REDUCE IOTA ARROW
 %token <(int*int)> FUN FN COMMA SEMICOLON READ WRITE

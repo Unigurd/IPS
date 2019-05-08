@@ -222,9 +222,9 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
           |BoolVal n1 -> BoolVal (not n1)
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
 
-    //cannot test multiplication and division
+  //cannot test negation with multiplication and division
   | Negate(e1, pos) ->
-
+      let res1 = evalExp(e1,vtab, ftab)
       match res1 with
           |IntVal n1 -> IntVal (-n1)
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos

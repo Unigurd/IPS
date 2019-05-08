@@ -1,0 +1,84 @@
+\documentclass[oneside, a4paper, 11pt]{article} % onesided a4paper med 11pt font.
+\usepackage[english,danish]{babel} 
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry} % sets margin.
+\usepackage[table,xcdraw]{xcolor}
+\usepackage[normalem]{ulem}
+\useunder{\uline}{\ul}{}
+\usepackage{tabu}  %%Til at lave skemaer
+\usepackage{mathtools}
+\usepackage{blindtext}
+\usepackage{enumitem}
+\usepackage{amsmath, calc}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{amsfonts,amssymb,amsthm}
+\usepackage{float}
+\usepackage{bm} % bold package
+\usepackage{multirow}
+\usepackage{xfrac}
+\usepackage{moreverb}
+\usepackage{booktabs}
+\usepackage{tikz}
+%\usepackage{soul}
+\usepackage{centernot}
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;} 
+\usepackage{siunitx} % aktiverer genveje til forskellige talsymboler, eksempelvis bliver \R == de reele tal.
+	\newcommand{\N}{\ensuremath{\mathbb{N}}}
+	\newcommand{\Z}{\ensuremath{\mathbb{Z}}}
+	\newcommand{\Q}{\ensuremath{\mathbb{Q}}}
+	\newcommand{\R}{\ensuremath{\mathbb{R}}}
+	\newcommand{\C}{\ensuremath{\mathbb{C}}}
+	\newcommand{\F}{\ensuremath{\mathbb{F}}}
+\usepackage[affil-it]{authblk} %% AFFILIATION PACKAGE. %%
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil} % aktiverer genveje til mathCeil og mathFloor.
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily,
+  breaklines=true,
+  mathescape,
+  numbers=left,
+  stepnumber=1,
+  columns=fullflexible,
+  keepspaces=true,
+  inputencoding=ansinew,
+  extendedchars=\true,
+  escapeinside=__,
+  literate=%
+{æ}{{\ae}}1
+{å}{{\aa}}1
+{ø}{{\o}}1
+{Æ}{{\AE}}1
+{Å}{{\AA}}1
+{Ø}{{\O}}1,
+}
+\let\origthelstnumber\thelstnumber
+\makeatletter
+\newcommand*\Suppressnumber{%
+  \lst@AddToHook{OnNewLine}{%
+    \let\thelstnumber\relax%
+     \advance\c@lstnumber-\@ne\relax%
+    }
+}
+\newcommand*\Reactivatenumber{%
+  \lst@AddToHook{OnNewLine}{%
+   \let\thelstnumber\origthelstnumber%
+   \advance\c@lstnumber\@ne\relax}%
+}
+
+\title{IPS Group Project}
+\author{Sigurd Sonniks (lsn777) \and Jesper Rabjerg (lxc355)}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\input{1.tex}
+\input{2.tex}
+\input{3.tex}
+\input{4.tex}
+\end{document}
+

@@ -1,0 +1,135 @@
+\subsection*{Part a}
+
+For this part, we were tasked with implementing multiplication, division, integer negation, boolean negation, $\&\&$, $||$, true and false. \\
+
+The following simple regular expressions were added to the lexer to facilitate this. All of the matches attach the position in the file to the constructed token, and "true" and "false" attach their value as an F\# value as well.
+\begin{verbatim}
+  | '~'                   { Parser.NEGATE (getPos lexbuf) }
+  | "&&"                  { Parser.AND    (getPos lexbuf) }
+  | "||"                  { Parser.OR     (getPos lexbuf) }
+  | '*'                   { Parser.TIMES  (getPos lexbuf) }
+  | '/'                   { Parser.DIVIDE (getPos lexbuf) }
+  | "true"                { Parser.TRUE   (true,  getPos lexbuf) }
+  | "false"               { Parser.FALSE  (false, getPos lexbuf) }
+  | "not"                 { Parser.NOT    (getPos lexbuf) }
+\end{verbatim}
+~\\
+
+In the parser we added the corresponding tokens:
+\begin{verbatim}
+%token <bool*(int*int)> TRUE FALSE
+%token <(int*int)> AND OR NOT NEGATE
+%token <(int*int)> TIMES DIVIDE
+\end{verbatim}
+~\\
+
+We also added the following precedence rules in order to negate integers before multiplication and division, which in turn should be before addition and multiplication. But since $-(a \dot b) = (-a) \dot b = a \dot (-b)$, and likewise with addition, it is not important that negation happens before multiplication/division, just that it happens before addition and subtraction. Note also the binary operators all are left-associative as specified. \\
+
+For the boolean operators, negation happens before and'ing, which happens before or'ing.
+\begin{verbatim}
+%nonassoc ifprec letprec
+%left DEQ LTH
+%left PLUS MINUS
+%left TIMES DIVIDE
+%nonassoc NEGATE
+
+%left OR
+%left AND
+%nonassoc NOT
+\end{verbatim}
+
+The following cases were added to the Exp rule to add the new operations to the syntax tree. All of the F\# types take a position in the source file as their last argument. Furthermore, when constructing constant booleans they take their value as well. Unary operators take an expression that is the expression they operate on, and binary operators take two expressions, which, unsurprisingly, are the two expression they operate on.
+\begin{verbatim}
+    | TRUE           { Constant (BoolVal (fst $1), snd $1) }
+    | FALSE          { Constant (BoolVal (fst $1), snd $1) }
+    | Exp TIMES Exp  { Times($1, $3, $2) }
+    | Exp DIVIDE Exp { Divide($1, $3, $2) }
+    | Exp AND Exp    { And ($1, $3, $2) }
+    | Exp OR Exp     { Or ($1, $3, $2) }
+    | NOT Exp        { Not ($2, $1) }
+    | NEGATE Exp     { Negate($2, $1) }
+ \end{verbatim} 
+
+
+In the interpreter we added cases to evalExp for each of the operations. \\
+
+For multiplication, we evaluate each of the subexpressions. If both of them are integers, we multiply them and return the result. If any of them are anything else, we error. The same approach was used for division so the code will not be shown here.
+\begin{verbatim}
+  | Times(e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      let res2 = evalExp(e2,vtab, ftab)
+      match (res1, res2) with
+          | (IntVal n1, IntVal n2) -> IntVal (n1*n2)
+          | _ -> invalidOperands "Multiplication on non-integral args: " [(Int, Int)] res1 res2 pos
+\end{verbatim}
+
+\begin{comment}
+  | Divide(e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      let res2 = evalExp(e2,vtab, ftab)
+      match (res1, res2) with
+          | (IntVal n1, IntVal n2) -> IntVal (n1/n2)
+          | _ -> invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
+\end{comment}
+~\\
+
+For and'ing, we evaluate the two expressions in steps. This is because if the first one turns out to be false, the and-expression cannot possibly be true and we thus don't need to evaluate the second expression, the result of which is thus set to false. The result of the second expression can thus only be true if both this and the first expression evaluated to true, and we can thus safely return that. But if either of the first or second evaluated to something else than a boolean, we set typeError1 or typeError2, respectively, to true. If any of them are true, we error with the appropriate expression. The same approach was used for or'ing, so the code is not shown here.
+\begin{verbatim}
+  | And (e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab,ftab)
+      let (typeError1,res2) =
+          match res1 with
+              | BoolVal true  -> (false, evalExp(e2,vtab,ftab))
+              | BoolVal false -> (false, (BoolVal false))
+              | _             -> (true, (BoolVal false))
+      let typeError2 =
+          match res2 with
+              |BoolVal _ -> false
+              |_         -> true
+
+      if typeError1 then
+          invalidOperand "and'ing of non-bool arg: " Bool res1 pos
+      elif typeError2 then
+          invalidOperand "and'ing of non-bool arg: " Bool res2 pos
+      else
+          res2
+\end{verbatim}
+~\\
+\begin{comment}
+  | Or (e1, e2, pos) ->
+      let res1 = evalExp(e1,vtab,ftab)
+      let (typeError1,res2) =
+          match res1 with
+              | BoolVal true  -> (false, (BoolVal true))
+              | BoolVal false -> (false, evalExp(e2,vtab,ftab))
+              | _             -> (true, (BoolVal false))
+      let typeError2 =
+          match res2 with
+              |BoolVal _ -> false
+              |_         -> true
+
+      if typeError1 then
+          invalidOperand "and'ing of non-bool arg: " Bool res1 pos
+      elif typeError2 then
+          invalidOperand "and'ing of non-bool arg: " Bool res2 pos
+      else
+          res2
+\end{comment}
+
+For negation, we evaluate the expression and match it with the proper type. If it is of the proper type we negate it, and otherwise we report the error. The same approach was used for both boolean and integer negation, and so only the boolean variant is shown here. 
+\begin{verbatim}
+  | Not(e1, pos) ->
+      match res1 with
+      let res1 = evalExp(e1,vtab, ftab)
+          |BoolVal n1 -> BoolVal (not n1)
+          |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
+\end{verbatim}
+
+\begin{comment}
+  //cannot test negation with multiplication and division
+  | Negate(e1, pos) ->
+      let res1 = evalExp(e1,vtab, ftab)
+      match res1 with
+          |IntVal n1 -> IntVal (-n1)
+          |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
+\end{comment}
