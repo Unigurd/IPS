@@ -1,6 +1,12 @@
+# binary files
 fasto/bin
 !fasto/bin/fasto
 !fasto/bin/runtests.sh
 
+# Emacs files
 \#*#
 .#*
+
+# generated test files
+fasto/tests/*.asm
+fasto/tests/*.out
