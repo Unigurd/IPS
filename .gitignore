@@ -9,4 +9,3 @@ fasto/bin
 
 # generated test files
 fasto/tests/*.asm
-fasto/tests/*.out
