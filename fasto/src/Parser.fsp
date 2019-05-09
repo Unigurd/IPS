@@ -145,7 +145,7 @@ Exp : NUM            { Constant (IntVal  (fst $1), snd $1) }
     | REDUCE LPAR OP BinOp COMMA Exp COMMA Exp RPAR
                      { Reduce ($4, $6, $8, (), $1) }
     | REPLICATE LPAR Exp COMMA Exp RPAR
-                     { Replicate ($3, $6, (), $1) } 
+                     { Replicate ($3, $5, (), $1) } 
     | LPAR Exp RPAR  { $2 }
     // TODO: task 1(b): replace this with a more general production
     | LET ID EQ Exp IN Exp %prec letprec

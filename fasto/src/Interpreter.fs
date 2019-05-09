@@ -292,7 +292,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
               then ArrayVal( List.map (fun x -> IntVal x) [0..size-1], Int )
               else let msg = sprintf "Error: In iota call, size is negative: %i" size
                    raise (MyError(msg, pos))
-          | _ -> raise (MyError("Iota argument is not a number: "+ppVal 0 sz, pos))
+          | _ -> raise (MyError("iota argument is not a number: "+ppVal 0 sz, pos))
   | Map (farg, arrexp, _, _, pos) ->
         let arr  = evalExp(arrexp, vtab, ftab)
         let farg_ret_type = rtpFunArg farg ftab pos
@@ -320,8 +320,16 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
          the value of `a`; otherwise raise an error (containing 
          a meaningful message).
   *)
-  | Replicate (n, a, _, _) ->
-        failwith "Unimplemented interpretation of replicate"
+  | Replicate (n, a, _, pos) ->
+       let sz  = evalExp(n, vtab, ftab)
+       let elm = evalExp(a, vtab, ftab)
+       match sz with
+          | IntVal size ->
+              if size >= 0
+              then ArrayVal( List.map (fun x -> elm) [0..size-1], Int )
+              else let msg = sprintf "Error: In replicate call, size is negative: %i" size
+                   raise (MyError(msg, pos))
+          | _ -> raise (MyError("replicate argument is not a number: "+ppVal 0 sz, pos))
 
   (* TODO project task 2: `filter(p, arr)`
        pattern match the implementation of map:

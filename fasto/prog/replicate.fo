@@ -1,0 +1,15 @@
+fun [char] main() =
+    let a = map(write_char, replicate(5 - 3, "hej")) in
+    let b = map(write_int, replicate(5, 1 + 3*4)) in
+    let c = map(write_int_arr, replicate(2, {1,2,3})) in
+    "davs"
+
+
+fun int write_int (int i) =
+  write(i)
+
+fun [int] write_int_arr ([int] ia) =
+  map(write_int, ia)
+
+fun [char] write_char ([char] c) =
+  write(c)
