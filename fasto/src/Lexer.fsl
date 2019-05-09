@@ -1,9 +1,7 @@
 ////////////////////////////////////////////////////////////////////
 // TODO: project task 1 
 //   implement lexer tokens for the new operators: 
-//   multiplication (*), division (/), numerical negation (~), 
-//   logical negation (not), logical and (&&), logical or (||),
-//   boolean literals (true, false), semicolon (;)
+//   semicolon (;)
 //
 //
 // TODO: project task 2 
@@ -109,6 +107,7 @@ rule Token = parse
                             let str1 = str0.Substring (1, (String.length str0) - 2)
                             Parser.STRINGLIT (AbSyn.fromCString str1, getPos lexbuf)
                           }
+  | ';'                   { Parser.SEMICOLON   (getPos lexbuf) }
   | '~'                   { Parser.NEGATE (getPos lexbuf) }
   | "&&"                  { Parser.AND    (getPos lexbuf) }
   | "||"                  { Parser.OR     (getPos lexbuf) }
