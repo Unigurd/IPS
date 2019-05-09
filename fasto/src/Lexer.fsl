@@ -35,7 +35,7 @@ let rec getLineCol pos line = function
         else getLineCol pos (line-1) ps
     |  [] -> (0,0) (* should not happen *)
 
-let getPos (lexbuf : LexBuffer<'char>) =
+let getPos (lexbuf : LexBuffer<'char>) =   // ' apostrophe for syntax highlighting
       getLineCol lexbuf.StartPos.pos_cnum
                  (currentLine)
                  (lineStartPos)
@@ -70,6 +70,7 @@ let keyword (s, pos) =
        | "reduce"       -> Parser.REDUCE pos
        | "read"         -> Parser.READ pos
        | "write"        -> Parser.WRITE pos
+       | "replicate"    -> Parser.REPLICATE pos
        | _              -> Parser.ID (s, pos)
 
 }
@@ -95,7 +96,7 @@ rule Token = parse
   | ['a'-'z' 'A'-'Z']['a'-'z' 'A'-'Z' '0'-'9' '_']*
                           { keyword ( Encoding.UTF8.GetString(lexbuf.Lexeme)
                                     , getPos lexbuf ) }
-  | "\'" ( ("\\" [' '-'~']) | [' ' '!' '#'-'&' '('-'[' ']'-'~'] ) "\'"
+  | "\'" ( ("\\" [' '-'~']) | [' ' '!' '#'-'&' '('-'[' ']'-'~'] ) "\'"         // ' apostrophe for syntax highlighting
                           { // BUG: needs also |  ... '\047' == "\'" ??? '\134' == "\\" ???
                             let str = Encoding.UTF8.GetString(lexbuf.Lexeme)
                             if (String.length str) = 3

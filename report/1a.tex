@@ -95,6 +95,7 @@ For and'ing, we evaluate the two expressions in steps. This is because if the fi
           res2
 \end{verbatim}
 ~\\
+
 \begin{comment}
   | Or (e1, e2, pos) ->
       let res1 = evalExp(e1,vtab,ftab)
@@ -125,6 +126,7 @@ For negation, we evaluate the expression and match it with the proper type. If i
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
 \end{verbatim}
 ~\\
+
 \begin{comment}
   //cannot test negation with multiplication and division
   | Negate(e1, pos) ->
@@ -144,6 +146,7 @@ For type checking and, or, multiplication and division, we check the types of th
         else raise (MyError ("In Times: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
 \end{verbatim}
 ~\\
+
 \begin{comment}
     | Divide (e1, e2, pos) ->
         let (t1, e1_dec) = checkExp ftab vtab e1

@@ -45,7 +45,7 @@ let parse_error_rich =
 %token <(int*int)> PLUS MINUS LESS
 %token <(int*int)> AND OR NOT NEGATE
 %token <(int*int)> TIMES DIVIDE
-%token <(int*int)> DEQ LTH EQ OP MAP REDUCE IOTA ARROW
+%token <(int*int)> DEQ LTH EQ OP MAP REDUCE IOTA ARROW REPLICATE
 %token <(int*int)> FUN FN COMMA SEMICOLON READ WRITE
 %token <(int*int)> LPAR RPAR LBRACKET RBRACKET LCURLY RCURLY
 
@@ -144,6 +144,8 @@ Exp : NUM            { Constant (IntVal  (fst $1), snd $1) }
                      { Reduce ($3, $5, $7, (), $1) }
     | REDUCE LPAR OP BinOp COMMA Exp COMMA Exp RPAR
                      { Reduce ($4, $6, $8, (), $1) }
+    | REPLICATE LPAR Exp COMMA Exp RPAR
+                     { Replicate ($3, $6, (), $1) } 
     | LPAR Exp RPAR  { $2 }
     // TODO: task 1(b): replace this with a more general production
     | LET ID EQ Exp IN Exp %prec letprec
