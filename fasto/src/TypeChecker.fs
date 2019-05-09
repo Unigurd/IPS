@@ -104,10 +104,6 @@ and checkExp  (ftab : FunTable)
         then (Int, Minus (e1_dec, e2_dec, pos))
         else raise (MyError ("In Minus: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
 
-    (* TODO project task 1:
-        Implement by pattern matching Plus/Minus above.
-        See `AbSyn.fs` for the expression constructors of `Times`, ...
-    *)
     | Times (e1, e2, pos) ->
         let (t1, e1_dec) = checkExp ftab vtab e1
         let (t2, e2_dec) = checkExp ftab vtab e2

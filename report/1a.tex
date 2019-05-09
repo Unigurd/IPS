@@ -124,7 +124,7 @@ For negation, we evaluate the expression and match it with the proper type. If i
           |BoolVal n1 -> BoolVal (not n1)
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
 \end{verbatim}
-
+~\\
 \begin{comment}
   //cannot test negation with multiplication and division
   | Negate(e1, pos) ->
@@ -132,4 +132,55 @@ For negation, we evaluate the expression and match it with the proper type. If i
       match res1 with
           |IntVal n1 -> IntVal (-n1)
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
+\end{comment}
+
+For type checking and, or, multiplication and division, we check the types of the argument expressions. If they have the proper types we return the result type along with the expression. If they don't we raise an appropriate error. Multiplication is shown here. The other operations are implemented in a similar fashion.
+\begin{verbatim}
+    | Times (e1, e2, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        let (t2, e2_dec) = checkExp ftab vtab e2
+        if (Int = t1 && Int = t2)
+        then (Int, Times (e1_dec, e2_dec, pos))
+        else raise (MyError ("In Times: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
+\end{verbatim}
+~\\
+\begin{comment}
+    | Divide (e1, e2, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        let (t2, e2_dec) = checkExp ftab vtab e2
+        if (Int = t1 && Int = t2)
+        then (Int, Divide(e1_dec, e2_dec, pos))
+        else raise (MyError ("In Divide: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
+
+    | And (e1, e2, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        let (t2, e2_dec) = checkExp ftab vtab e2
+        if (Bool = t1 && Bool = t2)
+        then (Bool, And(e1_dec, e2_dec, pos))
+        else raise (MyError ("In And: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
+
+
+    | Or (e1, e2, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        let (t2, e2_dec) = checkExp ftab vtab e2
+        if (Bool = t1 && Bool = t2)
+        then (Bool, Or(e1_dec, e2_dec, pos))
+        else raise (MyError ("In Or: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
+\end{comment}
+
+Integer and boolean negation are implemented in a similar fashion. Since they only take one expression as an argument, we just type check that expression. Boolean negation is shown here, but integer negation is implemented in the same way.
+\begin{verbatim}
+    | Not (e1, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        if (Bool = t1) 
+        then (Bool, Not(e1_dec, pos))
+        else raise (MyError ("In Not: subexpression type is not Bool: "+ppType t1, pos))
+\end{verbatim}
+
+\begin{comment}
+    | Negate (e1, pos) ->
+        let (t1, e1_dec) = checkExp ftab vtab e1
+        if (Int= t1) 
+        then (Int, Negate(e1_dec, pos))
+        else raise (MyError ("In Negate: subexpression type is not Int: "+ppType t1, pos))
 \end{comment}
