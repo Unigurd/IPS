@@ -325,9 +325,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
        - create an `ArrayVal` from the (list) result of the previous step.
   *)
   | Filter (farg, arrexp, _, pos) ->
-        printfn "Past parser"
         let arr = evalExp(arrexp, vtab, ftab)
-        let farg_ret_type = rtpFunArg farg ftab pos
         
         match arr with
           | ArrayVal (lst,tp1) ->

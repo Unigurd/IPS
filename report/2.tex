@@ -1,2 +1,43 @@
 \pagebreak
 \section*{Task 2}
+We have added a few lines in the Lexer and Parser. For the Lexer we added "replicate" and "filter" as new keywords, we added them as tokens in the Parser and added grammar rules. We haven't done anything for scan as of yet. Below you can see the implementation in the Interpreter.
+
+\subsection*{Replicate}
+\begin{verbatim}
+  | Replicate (n, a, _, pos) ->
+       let sz  = evalExp(n, vtab, ftab)
+       let elm = evalExp(a, vtab, ftab)
+       match sz with
+          | IntVal size ->
+              if size >= 0
+              then ArrayVal( List.map (fun x -> elm) [0..size-1], Int )
+              else let msg = sprintf "Error: In replicate call, size is negative: %i" size
+                   raise (MyError(msg, pos))
+          | _ -> raise (MyError("replicate argument is not a number: "+ppVal 0 sz, pos))
+\end{verbatim}
+
+First, size (ez) and the element to be replicated (elm) are extracted from the value table. Next sz is matched to extract the primitive value which is checked to make sure it is not negative. Then we apply the map function, where the function argument returns elm so that all the elements will have the same specified value. Error messages are thrown in case the sz is not an integer, and size is negative.
+
+\subsection*{Filter}
+\begin{verbatim}
+  | Filter (farg, arrexp, _, pos) ->
+        let arr = evalExp(arrexp, vtab, ftab)
+        
+        match arr with
+          | ArrayVal (lst,tp1) ->
+            let func = (evalFunArg (farg, vtab, ftab, pos, lst))
+            match func with
+              | BoolVal funcc ->
+                let mlst = List.filter (fun x -> funcc) lst
+                ArrayVal (mlst, tp1)
+              | otherwise       -> raise (MyError ("First function argument return type is not bool: "+ppVal 0 arr, pos))
+          | otherwise          -> 
+            raise (MyError ("Second argument of filter is not an array: "+ppVal 0 arr, pos))
+\end{verbatim}
+
+First, the array (arr) is extracted from the value table. Then arr is matched to extract the primitive value. Then the lambda expression is found using the evalFunArg, which is matched in order to unpack it,because the filter function expects the function argument to return bool and not the user defined Value. This will at the same time check to see if the function argument is the correct return type. In case the function argument return type is not bool, or if the expression argument is not an array, then exceptions are thrown.
+
+Unfortunately we never got to test filter, because a Parser error occoured. The same error occoured when the Interpreter implementation was not implemented, so it must be a fault with the Parser. Yet, the steps to taken in the Parser and Lexer for replicate were the same steps taken for filter. 
+
+\subsection*{Scan}
+N/A
