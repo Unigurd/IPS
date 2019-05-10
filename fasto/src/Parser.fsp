@@ -147,8 +147,10 @@ Exp : NUM            { Constant (IntVal  (fst $1), snd $1) }
                      { Reduce ($4, $6, $8, (), $1) }
     | REPLICATE LPAR Exp COMMA Exp RPAR
                      { Replicate ($3, $5, (), $1) } 
+                     
     | FILTER LPAR FunArg COMMA Exp RPAR
                      { Filter ($3, $5, (), $1) }
+
     | LPAR Exp RPAR  { $2 }
 
     | LET Decs %prec letprec
