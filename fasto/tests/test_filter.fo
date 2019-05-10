@@ -1,0 +1,6 @@
+fun int main() =
+    let arr = iota(5) in
+    let arr2 = map(fn int (int x) => x + 2, arr) in
+    let john = replicate(5, false) in
+    let john2 = filter(fn bool (bool x) => x = true, {true, false, true}) int
+    0

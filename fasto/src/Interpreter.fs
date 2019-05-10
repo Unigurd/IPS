@@ -3,23 +3,17 @@
 module Interpreter
 
 (*
-
 An interpreter executes a (Fasto) program by inspecting the abstract syntax
 tree of the program, and doing what needs to be done in another programming
 language (F#).
-
 As mentioned in AbSyn.fs, some Fasto expressions are implicitly typed. The
 interpreter infers the missing types, and checks the types of the operands
 before performing any Fasto operation. Some type errors might still occur though.
-
 Any valid Fasto program must contain a "main" function, which is the entry
 point of the program. The return value of this function is the result of the
 Fasto program.
-
 The main function of interest in this module is:
-
   val evalProg : AbSyn.UntypedProg -> AbSyn.Value
-
 *)
 
 open System
@@ -157,15 +151,6 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
           | (IntVal n1, IntVal n2) -> IntVal (n1-n2)
           | _ -> invalidOperands "Minus on non-integral args: " [(Int, Int)] res1 res2 pos
 
-  (* TODO: project task 1:
-     Look in `AbSyn.fs` for the arguments of the `Times`
-     (`Divide`,...) expression constructors.
-        Implementation similar to the cases of Plus/Minus.
-        Try to pattern match the code above.
-        For `And`/`Or`: make sure to implement the short-circuit semantics,
-        e.g., `And (e1, e2, pos)` should not evaluate `e2` if `e1` already
-              evaluates to false.
-  *)
   | Times(e1, e2, pos) ->
       let res1 = evalExp(e1,vtab, ftab)
       let res2 = evalExp(e2,vtab, ftab)
@@ -292,7 +277,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
               then ArrayVal( List.map (fun x -> IntVal x) [0..size-1], Int )
               else let msg = sprintf "Error: In iota call, size is negative: %i" size
                    raise (MyError(msg, pos))
-          | _ -> raise (MyError("Iota argument is not a number: "+ppVal 0 sz, pos))
+          | _ -> raise (MyError("iota argument is not a number: "+ppVal 0 sz, pos))
   | Map (farg, arrexp, _, _, pos) ->
         let arr  = evalExp(arrexp, vtab, ftab)
         let farg_ret_type = rtpFunArg farg ftab pos
@@ -320,8 +305,16 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
          the value of `a`; otherwise raise an error (containing 
          a meaningful message).
   *)
-  | Replicate (n, a, _, _) ->
-        failwith "Unimplemented interpretation of replicate"
+  | Replicate (n, a, _, pos) ->
+       let sz  = evalExp(n, vtab, ftab)
+       let elm = evalExp(a, vtab, ftab)
+       match sz with
+          | IntVal size ->
+              if size >= 0
+              then ArrayVal( List.map (fun x -> elm) [0..size-1], Int )
+              else let msg = sprintf "Error: In replicate call, size is negative: %i" size
+                   raise (MyError(msg, pos))
+          | _ -> raise (MyError("replicate argument is not a number: "+ppVal 0 sz, pos))
 
   (* TODO project task 2: `filter(p, arr)`
        pattern match the implementation of map:
@@ -331,8 +324,21 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
          under predicate `p`, i.e., `p(a) = true`;
        - create an `ArrayVal` from the (list) result of the previous step.
   *)
-  | Filter (_, _, _, _) ->
-        failwith "Unimplemented interpretation of map"
+  | Filter (farg, arrexp, _, pos) ->
+        printfn "Past parser"
+        let arr = evalExp(arrexp, vtab, ftab)
+        let farg_ret_type = rtpFunArg farg ftab pos
+        
+        match arr with
+          | ArrayVal (lst,tp1) ->
+            let func = (evalFunArg (farg, vtab, ftab, pos, lst))
+            match func with
+              | BoolVal funcc ->
+                let mlst = List.filter (fun x -> funcc) lst
+                ArrayVal (mlst, tp1)
+              | otherwise       -> raise (MyError ("First function argument return type is not bool: "+ppVal 0 arr, pos))
+          | otherwise          -> 
+            raise (MyError ("Second argument of filter is not an array: "+ppVal 0 arr, pos))
 
   (* TODO project task 2: `scan(f, ne, arr)`
      Implementation similar to reduce, except that it produces an array 
@@ -448,4 +454,4 @@ and evalProg (prog : UntypedProg) : Value =
       | Some m ->
           match getFunArgs m with
             | [] -> callFunWithVtable(m, [], SymTab.empty(), ftab, (0,0))
-            | _  -> raise (MyError("The main function is not allowed to have parameters", getFunPos m))
+            | _ -> raise (MyError("The main function is not allowed to have parameters", getFunPos m))
