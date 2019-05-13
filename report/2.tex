@@ -1,2 +1,45 @@
 \pagebreak
 \section*{Task 2}
+
+\subsection*{replicate}
+
+We added the string "replicate" to the keyword function in order to create a REPLICATE token.
+\begin{verbatim}
+       | "replicate"    -> Parser.REPLICATE pos
+\end{verbatim}
+~\\
+
+We then added a rule to the Exp non-terminal. It matches a replicate token given proper arguments and builds a syntax tree from the information.
+\begin{verbatim}
+    | REPLICATE LPAR Exp COMMA Exp RPAR
+                     { Replicate ($3, $5, (), $1) } 
+\end{verbatim}
+~\\
+
+In the interpreter we evaluate the expressions yielding the size and the element to replicate. If sz is an int we create a list of correct size and map over it to change all elements to elm. Otherwise we raise an error.
+\begin{verbatim}
+  | Replicate (n, a, _, pos) ->
+       let sz  = evalExp(n, vtab, ftab)
+       let elm = evalExp(a, vtab, ftab)
+       match sz with
+          | IntVal size ->
+              if size >= 0
+              then ArrayVal( List.map (fun x -> elm) [0..size-1], Int )
+              else let msg = sprintf "Error: In replicate call, size is negative: %i" size
+                   raise (MyError(msg, pos))
+          | _ -> raise (MyError("replicate argument is not a number: "+ppVal 0 sz, pos))
+\end{verbatim}
+~\\
+
+When typechecking, we check the size-expression, and if it is of type Int we return a tuple consisting ofArray (elm\_type), where elm\_type is the type of the elements in the array, and the typed syntax tree.
+\begin{verbatim}
+    | Replicate (n, a, _, pos) ->
+        let (sz_type, sz_exp_dec) = checkExp ftab vtab n
+        if sz_type = Int then
+            let (elm_type, elm_exp_dec) = checkExp ftab vtab a
+            (Array (elm_type), 
+                    Replicate (sz_exp_dec, elm_exp_dec, elm_type, pos))
+        else 
+           raise (MyError ("replicate: Argument not an int", pos))
+\end{verbatim}
+

@@ -1,1 +1,23 @@
 \subsection*{Part b}
+
+For implementing multiple-declaration let statements, we added a regular expression that matches a semi-colon and constructs a SEMICOLON token in the lexer.
+\begin{verbatim}
+  | ';'                   { Parser.SEMICOLON   (getPos lexbuf) }
+\end{verbatim}
+~\\
+
+We added a new non-terminal to facilitate multi-lets. This non-terminal can essentially be thought of as a linked list of lets separated by semicolons. It either matches a declaration with a semicolon and some more declarations afterwards or a final declaration with an expression to use it in afterwards. This ensures that there will always be at least one declaration in a let statement.
+\begin{verbatim}
+Decs : ID EQ Exp SEMICOLON Decs
+                    { Let (Dec (fst $1, $3, $2), $5, snd $1) }
+    | ID EQ Exp IN Exp
+                    { Let (Dec (fst $1, $3, $2), $5, snd $1) }
+\end{verbatim}
+~\\
+
+The let rule in the Exp non-terminal is changed to use the new Decs non-terminal.
+\begin{verbatim}
+    | LET Decs %prec letprec
+\end{verbatim}
+
+
