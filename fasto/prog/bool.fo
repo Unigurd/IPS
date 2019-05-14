@@ -1,17 +1,23 @@
 fun [char] main() =
-    let aa = write(true) in
-    let ab = write(false) in
-    let ac = write(not true) in
-    let ad = write(not false) in
-    let a = write(true && false) in
-    let b = write(false && true) in
-    let c = write(true && true) in
-    let d = write(false && false) in
-    let e = write(true || false) in
-    let f = write(false || true) in
-    let g = write(true || true) in
-    let h = write(false || false) in
-    let i = write(true || true && false) in
-    let j = write(not true && false) in
-    let k = write(not false || true) in
+    let aa = writen(true) in
+    let ab = writen(false) in
+    let ac = writen(not true) in
+    let ad = writen(not false) in
+    let a = writen(true && false) in
+    let b = writen(false && true) in
+    let c = writen(true && true) in
+    let d = writen(false && false) in
+    let e = writen(true || false) in
+    let f = writen(false || true) in
+    let g = writen(true || true) in
+    let h = writen(false || false) in
+    let i = writen(true || true && false) in
+    let j = writen(not true && false) in
+    let k = writen(not false || true) in
     "hej"
+
+
+fun bool writen(bool b) = 
+    let a = write(b) in
+    let aa = write("\n") in
+    b

@@ -1,0 +1,4 @@
+fun [char] main () =
+    let a = write(not true) in
+    let b = write(not false) in
+    "bavs"
