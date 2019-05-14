@@ -1,0 +1,5 @@
+fun [char] writeBool([char] b) = write(b)
+
+fun [char] main() =
+  let fs = replicate(7, 'c') in
+  write(fs)

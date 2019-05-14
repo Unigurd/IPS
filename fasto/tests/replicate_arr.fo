@@ -1,0 +1,12 @@
+
+fun [[[char]]] main() =
+  let fs = replicate(2, {"hej",
+                         "med dig"} ) in
+  map(writeBool, fs)
+
+
+fun [[char]] writeBool([[char]] c) = 
+  map(writefun,c)
+
+fun [char] writefun ([char] c) =
+  write(c)
