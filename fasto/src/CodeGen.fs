@@ -717,9 +717,9 @@ let rec compileExp  (e      : TypedExp)
 
 
       n_code
-       @ a_code
        @ checksize
        @ dynalloc (size_reg, place, elem_type)
+       @ a_code
        @ init_regs
        @ loop_header
        @ loop_replicate

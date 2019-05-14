@@ -42,4 +42,56 @@ When typechecking, we check the size-expression, and if it is of type Int we ret
         else 
            raise (MyError ("replicate: Argument not an int", pos))
 \end{verbatim}
+~\\
+
+The translation of replicate to MIPS was based on the translation of iota, so we will not show all the code here. The essence of the translated MIPS is that the expression that calculates the size of the array is evaluated. If it is too small an error is raised, and otherwise the array is allocated. Then the expression that evaluates the thing to be copied into the array is evaluated. Next is a loop that copies that thing into each index of the array. \\
+
+We will now show and explain the changes from the \texttt{iota} code. \\
+The first change is that the expression that results in the value to be copied needs to be translated. The result is saved in register val\_reg and the translation is in a\_code.
+\begin{verbatim}
+      let val_reg  = newName "val_reg"
+      let a_code = compileExp a_exp vtable val_reg
+\end{verbatim}
+~\\
+
+Booleans and characters only take up 1 byte instead of the usual 4, so we need to deal with these cases. We pattern match on the size of the elements in the array. If the size is 1 we only save 1 byte at a time.
+\begin{verbatim}
+     let loop_replicate =
+          match getElemSize elem_type with
+              | One  -> [ Mips.SB (val_reg, addr_reg, "0") ]
+              | Four -> [ Mips.SW (val_reg, addr_reg, "0") ]
+\end{verbatim}
+~\\
+
+Likewise, if the size is 1 we only add 1 to the address where we copy to, while we add 4 to it if the size is 4, i.e. a word. 
+\begin{verbatim}
+      let loop_footer = 
+          match getElemSize elem_type with
+              | One  ->
+                  [ Mips.ADDI (addr_reg, addr_reg, "1")
+                  ; Mips.ADDI (i_reg, i_reg, "1")
+                  ; Mips.J loop_beg
+                  ; Mips.LABEL loop_end
+                  ]
+ 
+              | Four ->
+                  [ Mips.ADDI (addr_reg, addr_reg, "4")
+                  ; Mips.ADDI (i_reg, i_reg, "1")
+                  ; Mips.J loop_beg
+                  ; Mips.LABEL loop_end
+                  ]
+\end{verbatim}
+~\\
+
+Lastly we concatenate all these pieces of MIPS code together like we described earlier.
+\begin{verbatim}
+      n_code
+       @ checksize
+       @ dynalloc (size_reg, place, elem_type)
+       @ a_code
+       @ init_regs
+       @ loop_header
+       @ loop_replicate
+       @ loop_footer
+\end{verbatim}
 
