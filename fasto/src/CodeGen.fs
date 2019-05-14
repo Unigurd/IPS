@@ -267,16 +267,12 @@ let rec compileExp  (e      : TypedExp)
   | Not (e1, _) ->
       let t1    = newName "not_R"
       let code1 = compileExp e1 vtable t1
-      code1 @ [//Mips.ADDI (t1, "R0", "0");
-               Mips.XORI (place, t1, "1")]
+      code1 @ [Mips.XORI (place, t1, "1")]
 
   | Negate (e1, _) ->
       let t1 = newName "negate_R"
       let code1 = compileExp e1 vtable t1
-      code1 @ [//Mips.ADDI (t1, "R0", "0");
-               Mips.XORI (place, t1, "1")]
-
-// code1 @ [Mips.SUB (place, "R0",t1)]
+      code1 @ code1 @ [Mips.SUB (place, "R0",t1)]
 
   | Let (dec, e1, pos) ->
       let (code1, vtable1) = compileDec dec vtable

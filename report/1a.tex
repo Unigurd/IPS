@@ -62,15 +62,6 @@ For multiplication, we evaluate each of the subexpressions. If both of them are 
           | (IntVal n1, IntVal n2) -> IntVal (n1*n2)
           | _ -> invalidOperands "Multiplication on non-integral args: " [(Int, Int)] res1 res2 pos
 \end{verbatim}
-
-\begin{comment}
-  | Divide(e1, e2, pos) ->
-      let res1 = evalExp(e1,vtab, ftab)
-      let res2 = evalExp(e2,vtab, ftab)
-      match (res1, res2) with
-          | (IntVal n1, IntVal n2) -> IntVal (n1/n2)
-          | _ -> invalidOperands "Division on non-integral args: " [(Int, Int)] res1 res2 pos
-\end{comment}
 ~\\
 
 For and'ing, we evaluate the two expressions in steps. This is because if the first one turns out to be false, the and-expression cannot possibly be true and we thus don't need to evaluate the second expression, the result of which is thus set to false. The result of the second expression can thus only be true if both this and the first expression evaluated to true, and we can thus safely return that. But if either of the first or second evaluated to something else than a boolean, we set typeError1 or typeError2, respectively, to true. If any of them are true, we error with the appropriate expression. The same approach was used for or'ing, so the code is not shown here.
@@ -96,27 +87,6 @@ For and'ing, we evaluate the two expressions in steps. This is because if the fi
 \end{verbatim}
 ~\\
 
-\begin{comment}
-  | Or (e1, e2, pos) ->
-      let res1 = evalExp(e1,vtab,ftab)
-      let (typeError1,res2) =
-          match res1 with
-              | BoolVal true  -> (false, (BoolVal true))
-              | BoolVal false -> (false, evalExp(e2,vtab,ftab))
-              | _             -> (true, (BoolVal false))
-      let typeError2 =
-          match res2 with
-              |BoolVal _ -> false
-              |_         -> true
-
-      if typeError1 then
-          invalidOperand "and'ing of non-bool arg: " Bool res1 pos
-      elif typeError2 then
-          invalidOperand "and'ing of non-bool arg: " Bool res2 pos
-      else
-          res2
-\end{comment}
-
 For negation, we evaluate the expression and match it with the proper type. If it is of the proper type we negate it, and otherwise we report the error. The same approach was used for both boolean and integer negation, and so only the boolean variant is shown here. 
 \begin{verbatim}
   | Not(e1, pos) ->
@@ -126,15 +96,6 @@ For negation, we evaluate the expression and match it with the proper type. If i
           |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
 \end{verbatim}
 ~\\
-
-\begin{comment}
-  //cannot test negation with multiplication and division
-  | Negate(e1, pos) ->
-      let res1 = evalExp(e1,vtab, ftab)
-      match res1 with
-          |IntVal n1 -> IntVal (-n1)
-          |_ -> invalidOperand "Negation of non-boolean: " Bool res1 pos
-\end{comment}
 
 For type checking and, or, multiplication and division, we check the types of the argument expressions. If they have the proper types we return the result type along with the expression. If they don't we raise an appropriate error. Multiplication is shown here. The other operations are implemented in a similar fashion.
 \begin{verbatim}
@@ -147,30 +108,6 @@ For type checking and, or, multiplication and division, we check the types of th
 \end{verbatim}
 ~\\
 
-\begin{comment}
-    | Divide (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Int = t1 && Int = t2)
-        then (Int, Divide(e1_dec, e2_dec, pos))
-        else raise (MyError ("In Divide: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
-
-    | And (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Bool = t1 && Bool = t2)
-        then (Bool, And(e1_dec, e2_dec, pos))
-        else raise (MyError ("In And: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
-
-
-    | Or (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Bool = t1 && Bool = t2)
-        then (Bool, Or(e1_dec, e2_dec, pos))
-        else raise (MyError ("In Or: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
-\end{comment}
-
 Integer and boolean negation are implemented in a similar fashion. Since they only take one expression as an argument, we just type check that expression. Boolean negation is shown here, but integer negation is implemented in the same way.
 \begin{verbatim}
     | Not (e1, pos) ->
@@ -179,65 +116,54 @@ Integer and boolean negation are implemented in a similar fashion. Since they on
         then (Bool, Not(e1_dec, pos))
         else raise (MyError ("In Not: subexpression type is not Bool: "+ppType t1, pos))
 \end{verbatim}
+~\\
 
-\begin{comment}
-    | Negate (e1, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        if (Int= t1) 
-        then (Int, Negate(e1_dec, pos))
-        else raise (MyError ("In Negate: subexpression type is not Int: "+ppType t1, pos))
-\end{comment}
-
-
-
+We write boolean constants in MIPS simply by assigning a value 1 or 0 to the given place depending on the BoolVal.
 \begin{verbatim}
-    | Times (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Int = t1 && Int = t2)
-        then (Int, Times (e1_dec, e2_dec, pos))
-        else raise (MyError ("In Times: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
+  | Constant (BoolVal n, pos) ->
+      (* TODO project task 1: represent `true`/`false` values as `1`/`0` *)
+      if n then
+          [Mips.LI (place, "1")]
+      else
+          [Mips.LI (place, "0")]
 \end{verbatim}
 ~\\
 
-\begin{comment}
-    | Divide (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Int = t1 && Int = t2)
-        then (Int, Divide(e1_dec, e2_dec, pos))
-        else raise (MyError ("In Divide: one of subexpression types is not Int: "+ppType t1+" and "+ppType t2, pos))
-
-    | And (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Bool = t1 && Bool = t2)
-        then (Bool, And(e1_dec, e2_dec, pos))
-        else raise (MyError ("In And: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
-
-
-    | Or (e1, e2, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        let (t2, e2_dec) = checkExp ftab vtab e2
-        if (Bool = t1 && Bool = t2)
-        then (Bool, Or(e1_dec, e2_dec, pos))
-        else raise (MyError ("In Or: one of subexpression types is not Bool: "+ppType t1+" and "+ppType t2, pos))
-\end{comment}
-
+MIPS code for multiplication is generated by translating the subexpressions and multiplying their results with the MIPS multiplication instruction. Division is translated in the same way.
 \begin{verbatim}
-    | Not (e1, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        if (Bool = t1) 
-        then (Bool, Not(e1_dec, pos))
-        else raise (MyError ("In Not: subexpression type is not Bool: "+ppType t1, pos))
+  | Times (e1, e2, _) ->
+      let t1 = newName "times_L"
+      let t2 = newName "times_R"
+      let code1 = compileExp e1 vtable t1
+      let code2 = compileExp e2 vtable t2
+      code1 @ code2 @ [Mips.MUL (place,t1,t2)]
 \end{verbatim}
 ~\\
 
-\begin{comment}
-    | Negate (e1, pos) ->
-        let (t1, e1_dec) = checkExp ftab vtab e1
-        if (Int= t1) 
-        then (Int, Negate(e1_dec, pos))
-        else raise (MyError ("In Negate: subexpression type is not Int: "+ppType t1, pos))
-\end{comment}
+Boolean negation is translated by translating the expression that is to be negated, and then XOR'ing the resulting variable with 1. This works since true is represented by a 1 and false by a 0. 1 XOR 1 = 0 and 0 XOR 1 = 1, where the first operand is the boolean. Integer negation is translated in a similar way, except instead of an XOR instruction, we subtract the value to be negated from zero.
+\begin{verbatim}
+  | Not (e1, _) ->
+      let t1    = newName "not_R"
+      let code1 = compileExp e1 vtable t1
+      code1 @ [Mips.XORI (place, t1, "1")]
+\end{verbatim}
+~\\
+
+The translation for \texttt{AND} is as follows: first 0 is assigned to the result variable $place$. Next the fist condition is evaluated. If it turns out to be 0, we jump past the code that evaluates the next condition as an implementation of shortcircuiting. If it turns out to be 1, however, the next condition is evaluated. Whatever that condition turns out to be is assigned to $place$. This works since if the second condition is only evaluated if the first turned out to be true. Thus if the second is true we have 1 AND 1 = 1 and if the second is false we have 1 AND 0 = 0. The result is thus the same as the second operand. \texttt{OR} is implemented in a similar fashion.
+\begin{verbatim}
+  | And (e1, e2, _) ->
+      let falseLabel = newName "false"
+      let t1 = newName "And_L"
+      let t2 = newName "And_R"
+      let code1 = compileExp e1 vtable t1
+      let code2 = compileExp e2 vtable t2
+      code1 
+      @ [Mips.LUI (place, "0");
+         Mips.BEQ (t1,"R0",falseLabel)]
+      @ code2
+      @ [Mips.MOVE (place, t2);
+         Mips.LABEL falseLabel]
+\end{verbatim}
+~\\
+
 

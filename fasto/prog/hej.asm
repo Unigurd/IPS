@@ -115,6 +115,8 @@ main:
 # was:	jal	putint, 2
 	ori	$10, $0, 10
 # was:	ori	_negate_R_42_, 0, 10
+	ori	$10, $0, 10
+# was:	ori	_negate_R_42_, 0, 10
 	sub	$11, $16, $10
 # was:	sub	_plus_L_40_, R0, _negate_R_42_
 	ori	$10, $0, 3
@@ -125,6 +127,8 @@ main:
 # 	ori	2,_letBind_38_,0
 	jal	putint
 # was:	jal	putint, 2
+	ori	$10, $0, 20
+# was:	ori	_negate_R_47_, 0, 20
 	ori	$10, $0, 20
 # was:	ori	_negate_R_47_, 0, 20
 	sub	$10, $16, $10
