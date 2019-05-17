@@ -287,6 +287,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
                ArrayVal (mlst, farg_ret_type)
           | otherwise -> raise (MyError( "Second argument of map is not an array: "+ppVal 0 arr
                                        , pos))
+
   | Reduce (farg, ne, arrexp, tp, pos) ->
         let farg_ret_type = rtpFunArg farg ftab pos
         let arr  = evalExp(arrexp, vtab, ftab)
@@ -325,20 +326,21 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
        - create an `ArrayVal` from the (list) result of the previous step.
   *)
   | Filter (farg, arrexp, _, pos) ->
-        let arr = evalExp(arrexp, vtab, ftab)
-        
+        let arr  = evalExp(arrexp, vtab, ftab)
+        let farg_ret_type = rtpFunArg farg ftab pos
         match arr with
           | ArrayVal (lst,tp1) ->
-            let func = (evalFunArg (farg, vtab, ftab, pos, lst))
-            match func with
-              | BoolVal funcc ->
-                let mlst = List.filter (fun x -> funcc) lst
-                ArrayVal (mlst, tp1)
-              | otherwise       -> raise (MyError ("First function argument return type is not bool: "+ppVal 0 arr, pos))
-          | otherwise          -> 
-            raise (MyError ("Second argument of filter is not an array: "+ppVal 0 arr, pos))
+               let mlst = List.filter (fun x -> let y = evalFunArg (farg, vtab, ftab, pos, [x])
+                                                match y with
+                                                    | BoolVal b -> b
+                                                    | _ -> raise (MyError ("Function given to  filter does not return bool", pos))
+                                                           false) lst
+               ArrayVal (mlst, tp1)
+          | otherwise -> raise (MyError( "Second argument of map is not an array: "+ppVal 0 arr
+                                       , pos))
 
-  (* TODO project task 2: `scan(f, ne, arr)`
+
+   (* TODO project task 2: `scan(f, ne, arr)`
      Implementation similar to reduce, except that it produces an array 
      of the same type and length to the input array `arr`.
   *)

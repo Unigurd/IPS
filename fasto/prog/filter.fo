@@ -1,0 +1,8 @@
+fun [int] main () =
+  filter(
+         lessThanFive,
+         {1,2,3,4,5,6,7,8,9,10})
+//  let a = lessThanFive (7) in {3}
+
+fun bool lessThanFive (int i) =
+           if i < 5 then true else false 
