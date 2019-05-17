@@ -3,23 +3,17 @@
 module Interpreter
 
 (*
-
 An interpreter executes a (Fasto) program by inspecting the abstract syntax
 tree of the program, and doing what needs to be done in another programming
 language (F#).
-
 As mentioned in AbSyn.fs, some Fasto expressions are implicitly typed. The
 interpreter infers the missing types, and checks the types of the operands
 before performing any Fasto operation. Some type errors might still occur though.
-
 Any valid Fasto program must contain a "main" function, which is the entry
 point of the program. The return value of this function is the result of the
 Fasto program.
-
 The main function of interest in this module is:
-
   val evalProg : AbSyn.UntypedProg -> AbSyn.Value
-
 *)
 
 open System
@@ -293,6 +287,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
                ArrayVal (mlst, farg_ret_type)
           | otherwise -> raise (MyError( "Second argument of map is not an array: "+ppVal 0 arr
                                        , pos))
+
   | Reduce (farg, ne, arrexp, tp, pos) ->
         let farg_ret_type = rtpFunArg farg ftab pos
         let arr  = evalExp(arrexp, vtab, ftab)
@@ -330,10 +325,22 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
          under predicate `p`, i.e., `p(a) = true`;
        - create an `ArrayVal` from the (list) result of the previous step.
   *)
-  | Filter (_, _, _, _) ->
-        failwith "Unimplemented interpretation of map"
+  | Filter (farg, arrexp, _, pos) ->
+        let arr  = evalExp(arrexp, vtab, ftab)
+        let farg_ret_type = rtpFunArg farg ftab pos
+        match arr with
+          | ArrayVal (lst,tp1) ->
+               let mlst = List.filter (fun x -> let y = evalFunArg (farg, vtab, ftab, pos, [x])
+                                                match y with
+                                                    | BoolVal b -> b
+                                                    | _ -> raise (MyError ("Function given to  filter does not return bool", pos))
+                                                           false) lst
+               ArrayVal (mlst, tp1)
+          | otherwise -> raise (MyError( "Second argument of map is not an array: "+ppVal 0 arr
+                                       , pos))
 
-  (* TODO project task 2: `scan(f, ne, arr)`
+
+   (* TODO project task 2: `scan(f, ne, arr)`
      Implementation similar to reduce, except that it produces an array 
      of the same type and length to the input array `arr`.
   *)
@@ -447,4 +454,4 @@ and evalProg (prog : UntypedProg) : Value =
       | Some m ->
           match getFunArgs m with
             | [] -> callFunWithVtable(m, [], SymTab.empty(), ftab, (0,0))
-            | _  -> raise (MyError("The main function is not allowed to have parameters", getFunPos m))
+            | _ -> raise (MyError("The main function is not allowed to have parameters", getFunPos m))

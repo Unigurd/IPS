@@ -40,7 +40,7 @@ let parse_error_rich =
 %token <(int*int)> PLUS MINUS LESS
 %token <(int*int)> AND OR NOT NEGATE
 %token <(int*int)> TIMES DIVIDE
-%token <(int*int)> DEQ LTH EQ OP MAP REDUCE IOTA ARROW REPLICATE
+%token <(int*int)> DEQ LTH EQ OP MAP REDUCE IOTA ARROW REPLICATE FILTER
 %token <(int*int)> FUN FN COMMA SEMICOLON READ WRITE
 %token <(int*int)> LPAR RPAR LBRACKET RBRACKET LCURLY RCURLY
 
@@ -147,6 +147,10 @@ Exp : NUM            { Constant (IntVal  (fst $1), snd $1) }
                      { Reduce ($4, $6, $8, (), $1) }
     | REPLICATE LPAR Exp COMMA Exp RPAR
                      { Replicate ($3, $5, (), $1) } 
+                     
+    | FILTER LPAR FunArg COMMA Exp RPAR
+                     { Filter ($3, $5, (), $1) }
+
     | LPAR Exp RPAR  { $2 }
 
     | LET Decs %prec letprec

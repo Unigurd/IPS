@@ -95,3 +95,28 @@ Lastly we concatenate all these pieces of MIPS code together like we described e
        @ loop_footer
 \end{verbatim}
 
+
+\subsection*{Filter}
+\begin{verbatim}
+  | Filter (farg, arrexp, _, pos) ->
+        let arr = evalExp(arrexp, vtab, ftab)
+        
+        match arr with
+          | ArrayVal (lst,tp1) ->
+            let func = (evalFunArg (farg, vtab, ftab, pos, lst))
+            match func with
+              | BoolVal funcc ->
+                let mlst = List.filter (fun x -> funcc) lst
+                ArrayVal (mlst, tp1)
+              | otherwise       -> raise (MyError ("First function argument return type is not bool: "+ppVal 0 arr, pos))
+          | otherwise          -> 
+            raise (MyError ("Second argument of filter is not an array: "+ppVal 0 arr, pos))
+\end{verbatim}
+
+First, the array (arr) is extracted from the value table. Then arr is matched to extract the primitive value. Then the lambda expression is found using the evalFunArg, which is matched in order to unpack it,because the filter function expects the function argument to return bool and not the user defined Value. This will at the same time check to see if the function argument is the correct return type. In case the function argument return type is not bool, or if the expression argument is not an array, then exceptions are thrown.
+
+Unfortunately we never got to test filter, because a Parser error occoured. The same error occoured when the Interpreter implementation was not implemented, so it must be a fault with the Parser. Yet, the steps to taken in the Parser and Lexer for replicate were the same steps taken for filter. 
+
+\subsection*{Scan}
+N/A
+

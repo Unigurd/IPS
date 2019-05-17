@@ -302,7 +302,7 @@ and checkExp  (ftab : FunTable)
             - the result of filter should have type `[tb]`
     *)
     | Filter (_, _, _, _) ->
-        failwith "Unimplemented type check of map"
+        failwith "Unimplemented type check of filter"
 
     // CheckExp(exp, vtable, ftable) = match Exp with
     // | Filter(p, arr_exp, _, pos) ->
