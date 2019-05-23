@@ -344,7 +344,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
      Implementation similar to reduce, except that it produces an array 
      of the same type and length to the input array `arr`.
   *)
-  | Scan (_, _, _, _, _) ->
+  | Scan (farg, ne, arrexp, tp, pos) ->
         failwith "Unimplemented interpretation of scan"
 
   | Read (t,p) ->
