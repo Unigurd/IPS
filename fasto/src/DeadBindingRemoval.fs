@@ -64,11 +64,11 @@ let rec removeDeadBindingsInExp (e : TypedExp) : (bool * DBRtab * TypedExp) =
            (false, SymTab.fromList [name,()], Var (name, pos))
 
         | Index (name, e, t, pos) ->
-           let (ios, uses, e') = removeDeadBindingsInExp e
+            let (ios, uses, e') = removeDeadBindingsInExp e
             (ios, SymTab.bind name () uses, Index (name, e', t, pos)) 
 
         | Let (Dec (name, e, decpos), body, pos) ->
-           let (bodyios, bodyuses, body') = removeDeadBindingsInExp body
+            let (bodyios, bodyuses, body') = removeDeadBindingsInExp body
             match SymTab.lookup name bodyuses with
                 | Some _ ->
                     let eios, euses, e' = removeDeadBindingsInExp e
