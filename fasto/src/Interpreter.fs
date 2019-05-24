@@ -324,7 +324,7 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
        - check that the function `p` result type (use `rtpFunArg`) is bool; 
        - evaluate `arr` and check that the (value) result corresponds to an array;
        - use F# `List.filter` to keep only the elements `a` of `arr` which succeed
-         under predicate `p`, i.e., `p(a) = true`;
+         under predicate `p`, i.e., `p(a) = true`;List.scan (fun acc x -> evalFunArg (farg, vtab, ftab, pos, [acc;x])) nel lst
        - create an `ArrayVal` from the (list) result of the previous step.
   *)
   | Filter (farg, arrexp, _, pos) ->
@@ -343,11 +343,17 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
 
 
    (* TODO project task 2: `scan(f, ne, arr)`
-     Implementation similar to reduce, except that it produces an array 
-     of the same type and length to the input array `arr`.
-  *)
-  | Scan (_, _, _, _, _) ->
-        failwith "Unimplemented interpretation of scan"
+	     Implementation similar to reduce, except that it produces an array 
+	     of the same type and length to the input array `arr`.*)
+  | Scan (farg, ne, arrexp, tp, pos) ->
+        let farg_ret_type = rtpFunArg farg ftab pos
+        let arr  = evalExp(arrexp, vtab, ftab)
+        let nel  = evalExp(ne, vtab, ftab)
+        match arr with
+          | ArrayVal (lst,tp1) ->
+               let mlst = (List.scan (fun acc x -> evalFunArg (farg, vtab, ftab, pos, [acc;x])) nel lst)
+               ArrayVal (mlst, farg_ret_type)
+          | otherwise -> raise (MyError("Third argument of reduce is not an array: "+ppVal 0 arr, pos))
 
   | Read (t,p) ->
         let str = Console.ReadLine()
