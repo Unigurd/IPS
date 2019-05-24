@@ -1,2 +1,108 @@
 \pagebreak
 \section*{Task 3}
+
+\begin{verbatim}
+        | Index (name, e, t, pos) ->
+            (* TODO project task 3:
+                Should probably do the same as the `Var` case, for
+                the array name, and optimize the index expression `e` as well.
+            *)
+
+            let e' = copyConstPropFoldExp vtable e
+            match SymTab.lookup name vtable with
+                | Some a ->
+                    match a with
+                    | ConstProp c -> 
+                        match (c,e') with
+                            | ArrayVal (exp_lst, _), Constant (IntVal i, pos) -> 
+                                Constant (exp_lst.[i], pos)
+                            | _, _ -> Index (name, e', t, pos)
+
+                    | VarProp v   -> Index (v, e', t, pos)
+
+                | None   -> Index (name, e', t, pos)
+
+
+
+        | Let (Dec (name, e, decpos), body, pos) ->
+            let e' = copyConstPropFoldExp vtable e
+            match e' with
+                | Var (v, _) ->
+                    (* TODO project task 3:
+                        Hint: I have discovered a variable-copy statement `let x = a`.
+                              I should probably record it in the `vtable` by
+                              associating `x` with a variable-propagatee binding,
+                              and optimize the `body` of the let.
+                    *)
+                    copyConstPropFoldExp (SymTab.bind name (VarProp v) vtable) body
+
+                | Constant (c, pos) ->
+                    copyConstPropFoldExp (SymTab.bind name (ConstProp c) vtable) body
+
+                | Let (dec2, body2, pos2) ->
+                    (* TODO project task 3:
+                        Hint: this has the structure
+                                `let y = (let x = e1 in e2) in e3`
+                        Problem is, in this form, `e2` may simplify
+                        to a variable or constant, but I will miss
+                        identifying the resulting variable/constant-copy
+                        statement on `y`.
+                        A potential solution is to optimize directly the
+                        restructured, semantically-equivalent expression:
+                                `let x = e1 in let y = e2 in e3`
+                    *)
+                    copyConstPropFoldExp vtable (Let (dec2, Let (Dec (name, body2, decpos), body, pos), pos2))
+\end{verbatim}
+
+\begin{verbatim}
+        | Times (e1, e2, pos) ->
+            (* TODO project task 3: implement as many safe algebraic
+                simplifications as you can think of. You may inspire 
+                yourself from the case of `Plus`. For example:
+                     1 * x = ? 
+                     x * 0 = ?
+            *)
+            let e1' = copyConstPropFoldExp vtable e1
+            let e2' = copyConstPropFoldExp vtable e2
+            match (e1', e2') with
+                | (Constant (IntVal x, _), Constant (IntVal y, _)) ->
+                    Constant (IntVal (x * y), pos)
+                | (Constant (IntVal 0, _), _) -> Constant (IntVal 0, pos)
+                | (_, Constant (IntVal 0, _)) -> Constant (IntVal 0, pos)
+                | (Constant (IntVal 1, _), _) -> e2'
+                | (_, Constant (IntVal 1, _)) -> e1'
+                | _ -> Times (e1', e2', pos)
+ 
+        | And (e1, e2, pos) ->
+            (* TODO project task 3: see above. you may inspire yourself from `Or` *)
+
+            let e1' = copyConstPropFoldExp vtable e1
+            let e2' = copyConstPropFoldExp vtable e2
+            match (e1', e2') with
+                | Constant (BoolVal a, _), Constant (BoolVal b, _) ->
+                    Constant (BoolVal (a && b), pos)
+                | Constant (BoolVal true, _), b  -> b
+                | a, Constant (BoolVal true, _)  -> a
+                | Constant (BoolVal false, _), _ -> Constant (BoolVal false, pos)
+                | _, Constant (BoolVal false, _) -> Constant (BoolVal false, pos)
+                | _ -> And (e1', e2', pos)
+\end{verbatim}
+
+
+
+\begin{verbatim}
+        | Var (name, pos) ->
+           (false, SymTab.fromList [name,()], Var (name, pos))
+
+        | Index (name, e, t, pos) ->
+           let (ios, uses, e') = removeDeadBindingsInExp e
+            (ios, SymTab.bind name () uses, Index (name, e', t, pos)) 
+
+        | Let (Dec (name, e, decpos), body, pos) ->
+           let (bodyios, bodyuses, body') = removeDeadBindingsInExp body
+            match SymTab.lookup name bodyuses with
+                | Some _ ->
+                    let eios, euses, e' = removeDeadBindingsInExp e
+                    (eios || bodyios, SymTab.combine bodyuses euses, Let (Dec (name, e', decpos), body', pos))
+                | None -> (bodyios, bodyuses, body') 
+\end{verbatim}
