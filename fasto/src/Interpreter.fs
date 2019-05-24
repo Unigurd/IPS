@@ -341,17 +341,17 @@ let rec evalExp (e : UntypedExp, vtab : VarTable, ftab : FunTable) : Value =
 
 
    (* TODO project task 2: `scan(f, ne, arr)`
-     Implementation similar to reduce, except that it produces an array 
-     of the same type and length to the input array `arr`.
-  *)
+	     Implementation similar to reduce, except that it produces an array 
+	     of the same type and length to the input array `arr`.*)
   | Scan (farg, ne, arrexp, tp, pos) ->
         let farg_ret_type = rtpFunArg farg ftab pos
         let arr  = evalExp(arrexp, vtab, ftab)
         let nel  = evalExp(ne, vtab, ftab)
         match arr with
           | ArrayVal (lst,tp1) ->
-               List.scan (fun acc x -> evalFunArg (farg, vtab, ftab, pos, [acc;x])) nel lst
-          | otherwise -> raise (MyError("Third argument of reduce is not an array: "+ppVal 0 arr
+               let mlst = (List.scan (fun acc x -> evalFunArg (farg, vtab, ftab, pos, [acc;x])) nel lst)
+               ArrayVal (mlst, farg_ret_type)
+          | otherwise -> raise (MyError("Third argument of reduce is not an array: "+ppVal 0 arr, pos))
 
   | Read (t,p) ->
         let str = Console.ReadLine()
