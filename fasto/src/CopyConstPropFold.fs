@@ -22,13 +22,6 @@ let rec copyConstPropFoldExp (vtable : VarTable)
         (* Copy propagation is handled entirely in the following three
         cases for variables, array indexing, and let-bindings. *)
         | Var (name, pos) ->
-            (* TODO project task 3:
-                Should probably look in the symbol table to see if
-                a binding corresponding to the current variable `name`
-                exists and if so, it should replace the current expression
-                with the bound variable or constant.
-            *)
-
             match SymTab.lookup name vtable with
                 | Some v ->
                     match v with
@@ -39,11 +32,6 @@ let rec copyConstPropFoldExp (vtable : VarTable)
 
 
         | Index (name, e, t, pos) ->
-            (* TODO project task 3:
-                Should probably do the same as the `Var` case, for
-                the array name, and optimize the index expression `e` as well.
-            *)
-
             let e' = copyConstPropFoldExp vtable e
             match SymTab.lookup name vtable with
                 | Some a ->
@@ -64,29 +52,12 @@ let rec copyConstPropFoldExp (vtable : VarTable)
             let e' = copyConstPropFoldExp vtable e
             match e' with
                 | Var (v, _) ->
-                    (* TODO project task 3:
-                        Hint: I have discovered a variable-copy statement `let x = a`.
-                              I should probably record it in the `vtable` by
-                              associating `x` with a variable-propagatee binding,
-                              and optimize the `body` of the let.
-                    *)
                     copyConstPropFoldExp (SymTab.bind name (VarProp v) vtable) body
 
                 | Constant (c, pos) ->
                     copyConstPropFoldExp (SymTab.bind name (ConstProp c) vtable) body
 
                 | Let (dec2, body2, pos2) ->
-                    (* TODO project task 3:
-                        Hint: this has the structure
-                                `let y = (let x = e1 in e2) in e3`
-                        Problem is, in this form, `e2` may simplify
-                        to a variable or constant, but I will miss
-                        identifying the resulting variable/constant-copy
-                        statement on `y`.
-                        A potential solution is to optimize directly the
-                        restructured, semantically-equivalent expression:
-                                `let x = e1 in let y = e2 in e3`
-                    *)
                     copyConstPropFoldExp vtable (Let (dec2, Let (Dec (name, body2, decpos), body, pos), pos2))
 
                 | _ -> (* Fallthrough - for everything else, do nothing *)
@@ -94,12 +65,6 @@ let rec copyConstPropFoldExp (vtable : VarTable)
                     Let (Dec (name, e', decpos), body', pos)
 
         | Times (e1, e2, pos) ->
-            (* TODO project task 3: implement as many safe algebraic
-                simplifications as you can think of. You may inspire 
-                yourself from the case of `Plus`. For example:
-                     1 * x = ? 
-                     x * 0 = ?
-            *)
             let e1' = copyConstPropFoldExp vtable e1
             let e2' = copyConstPropFoldExp vtable e2
             match (e1', e2') with
@@ -112,8 +77,6 @@ let rec copyConstPropFoldExp (vtable : VarTable)
                 | _ -> Times (e1', e2', pos)
  
         | And (e1, e2, pos) ->
-            (* TODO project task 3: see above. you may inspire yourself from `Or` *)
-
             let e1' = copyConstPropFoldExp vtable e1
             let e2' = copyConstPropFoldExp vtable e2
             match (e1', e2') with

@@ -1,5 +1,5 @@
-fun [char] writeBool([char] b) = write(b)
+fun char writeChar(char b) = write(b)
 
 fun [char] main() =
   let fs = replicate(7, 'c') in
-  write(fs)
+  map(writeChar,fs)

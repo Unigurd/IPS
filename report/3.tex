@@ -1,13 +1,11 @@
 \pagebreak
 \section*{Task 3}
 
+Copy propagation is entirely handled by the Var, Index and Let cases of the copyConstPropFoldExp function. The Var case is not shown, since it is a simple version of the Index case. \\
+
+Handling Indexing into arrays, we first whether we can find the array in the vtable. If we cannot, we simply return the Index expression with the subexpression optimized. If we can, we check whether it is a constant or a variable array. If it is a constant array, we know the value at each position at compile-time, and so we simply return that. If it is a variable array, we return the matched Index with the indexing expression optimized. We realize that this code could be refactored to match on multiple things at once, such as Some ConstProp ArrayVal etc.
 \begin{verbatim}
         | Index (name, e, t, pos) ->
-            (* TODO project task 3:
-                Should probably do the same as the `Var` case, for
-                the array name, and optimize the index expression `e` as well.
-            *)
-
             let e' = copyConstPropFoldExp vtable e
             match SymTab.lookup name vtable with
                 | Some a ->
@@ -21,47 +19,31 @@
                     | VarProp v   -> Index (v, e', t, pos)
 
                 | None   -> Index (name, e', t, pos)
+\end{verbatim}
 
 
-
+In the Let case, we optimize the expression determining the value bound to the variable. If it is a variable or a constant, we simply bind the variable to the vtable as the proper case of Propagatee and optimize the body expression. If it is bound to another Let, we rearrange such that we put the outer Let in the body expression and optimize the inner Let.
+\begin{verbatim}
         | Let (Dec (name, e, decpos), body, pos) ->
             let e' = copyConstPropFoldExp vtable e
             match e' with
                 | Var (v, _) ->
-                    (* TODO project task 3:
-                        Hint: I have discovered a variable-copy statement `let x = a`.
-                              I should probably record it in the `vtable` by
-                              associating `x` with a variable-propagatee binding,
-                              and optimize the `body` of the let.
-                    *)
                     copyConstPropFoldExp (SymTab.bind name (VarProp v) vtable) body
 
                 | Constant (c, pos) ->
                     copyConstPropFoldExp (SymTab.bind name (ConstProp c) vtable) body
 
                 | Let (dec2, body2, pos2) ->
-                    (* TODO project task 3:
-                        Hint: this has the structure
-                                `let y = (let x = e1 in e2) in e3`
-                        Problem is, in this form, `e2` may simplify
-                        to a variable or constant, but I will miss
-                        identifying the resulting variable/constant-copy
-                        statement on `y`.
-                        A potential solution is to optimize directly the
-                        restructured, semantically-equivalent expression:
-                                `let x = e1 in let y = e2 in e3`
-                    *)
                     copyConstPropFoldExp vtable (Let (dec2, Let (Dec (name, body2, decpos), body, pos), pos2))
 \end{verbatim}
 
+We implemented constant folding for multiplication as well as and'ing. For multiplication we implemented the following folds:
+If both operands are constants, we compute the result at compile time and return that.
+If either of the operands are 0's, we return a 0.
+If either of the operands are 1's, we return the non-1 operand.
+Otherwise we just return the original multiplication with optimized operands.
 \begin{verbatim}
         | Times (e1, e2, pos) ->
-            (* TODO project task 3: implement as many safe algebraic
-                simplifications as you can think of. You may inspire 
-                yourself from the case of `Plus`. For example:
-                     1 * x = ? 
-                     x * 0 = ?
-            *)
             let e1' = copyConstPropFoldExp vtable e1
             let e2' = copyConstPropFoldExp vtable e2
             match (e1', e2') with
@@ -72,10 +54,15 @@
                 | (Constant (IntVal 1, _), _) -> e2'
                 | (_, Constant (IntVal 1, _)) -> e1'
                 | _ -> Times (e1', e2', pos)
- 
-        | And (e1, e2, pos) ->
-            (* TODO project task 3: see above. you may inspire yourself from `Or` *)
+\end{verbatim}
 
+For And, we implement the following optimizations:
+If both operands are constants, we compute the result at compile time and return that.
+If either of the operands is true, we return the other operand.
+If either of the operands is false, we return that.
+Otherwise, we return the original And with optimized operands.
+\begin{verbatim} 
+        | And (e1, e2, pos) ->
             let e1' = copyConstPropFoldExp vtable e1
             let e2' = copyConstPropFoldExp vtable e2
             match (e1', e2') with
@@ -89,17 +76,23 @@
 \end{verbatim}
 
 
-
+For dead binding removal, we implemented the Var, Index and Let cases. If we find a Var, we return a symbol table including that variable to indicate that it is used, the optimized expression which is just the variable declaration, and a boolean to indicate that there is no IO in this subexpression.
 \begin{verbatim}
         | Var (name, pos) ->
            (false, SymTab.fromList [name,()], Var (name, pos))
+\end{verbatim}
 
+If we find an Index expression, we optimize the indexing expression, and returns information about whether there is IO in that subexpression, the symbol table of the indexing expression with the name of the array included and, and the Index tree with the optimized subexpression.
+\begin{verbatim}
         | Index (name, e, t, pos) ->
-           let (ios, uses, e') = removeDeadBindingsInExp e
+            let (ios, uses, e') = removeDeadBindingsInExp e
             (ios, SymTab.bind name () uses, Index (name, e', t, pos)) 
+\end{verbatim}
 
+In the Let case we check whether the variable is used in the body. If it is not we simply return the body expression. If it is, we combine the information returned from optimizing the assignment and body expression and return that. I have just noticed that since we just throw the expression that is assigned to the variable away, we might throw important IO away. It would be a simple fix to match on that, but there is not time right now.
+\begin{verbatim}
         | Let (Dec (name, e, decpos), body, pos) ->
-           let (bodyios, bodyuses, body') = removeDeadBindingsInExp body
+            let (bodyios, bodyuses, body') = removeDeadBindingsInExp body
             match SymTab.lookup name bodyuses with
                 | Some _ ->
                     let eios, euses, e' = removeDeadBindingsInExp e
